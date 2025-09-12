@@ -1,15 +1,10 @@
 pipeline {
     agent any
 
-    tools {
-        git 'Default'  // Use the Git installation you set in Jenkins
-        nodejs 'NodeJS' // Make sure NodeJS is configured in Jenkins Global Tool Configuration
-    }
-
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo.git'
+                git branch: 'main', url: 'https://github.com/NaveenSukhavasi/8.2CDevSecOps.git'
             }
         }
 
