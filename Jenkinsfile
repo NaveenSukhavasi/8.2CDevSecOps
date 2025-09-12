@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        git 'Default'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -16,7 +20,10 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                bat 'npm test'
+                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+                    bat 'snyk auth %SNYK_TOKEN%'     
+                    bat 'npm test'                   
+                }
             }
         }
 
@@ -28,7 +35,9 @@ pipeline {
 
         stage('Security Scan') {
             steps {
-                bat 'snyk test'
+                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
+                    bat 'snyk test'                 
+                }
             }
         }
     }
