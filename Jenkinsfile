@@ -2,13 +2,24 @@ pipeline {
     agent any
 
     tools {
-        git 'Default'
+        nodejs 'NodeJS'       
+        git 'DefaultGit'      
+    }
+
+    parameters {
+        booleanParam(name: 'RUN_AUDIT_FIX', defaultValue: false, description: 'Run npm audit fix?')
+        booleanParam(name: 'RUN_SNYK_MONITOR', defaultValue: false, description: 'Push results to Snyk Dashboard?')
+    }
+
+    environment {
+        SNYK_TOKEN = credentials('snyk-token') 
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/NaveenSukhavasi/8.2CDevSecOps.git'
+                git branch: 'main',
+                    url: 'https://github.com/NaveenSukhavasi/8.2CDevSecOps.git'
             }
         }
 
@@ -18,33 +29,52 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Unit Tests') {
             steps {
-                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-                    bat 'snyk auth %SNYK_TOKEN%'     
-                    bat 'npm test'                   
+                bat 'npm test'
+            }
+        }
+
+        stage('Snyk Test') {
+            steps {
+                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+                    bat 'snyk auth %SNYK_TOKEN%'
+                    bat 'snyk test'
                 }
             }
         }
 
-        stage('Run Coverage') {
+        stage('Snyk Monitor (Optional)') {
+            when {
+                expression { return params.RUN_SNYK_MONITOR == true }
+            }
             steps {
-                bat 'npm run coverage'
+                withCredentials([string(credentialsId: 'snyk-token', variable: 'SNYK_TOKEN')]) {
+                    bat 'snyk auth %SNYK_TOKEN%'
+                    bat 'snyk monitor'
+                }
             }
         }
 
-        stage('Security Scan') {
+        stage('Audit Fix (Optional)') {
+            when {
+                expression { return params.RUN_AUDIT_FIX == true }
+            }
             steps {
-                withCredentials([string(credentialsId: 'SNYK_TOKEN', variable: 'SNYK_TOKEN')]) {
-                    bat 'snyk test'                 
-                }
+                bat 'npm audit fix --force'
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline finished.'
+            archiveArtifacts artifacts: '**/npm-debug.log', allowEmptyArchive: true
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
