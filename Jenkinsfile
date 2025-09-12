@@ -31,14 +31,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
                     bat """
-                    REM Download SonarScanner CLI if not already downloaded
-                    if not exist sonar-scanner-cli-5.15.0.36214-windows.zip (
-                        powershell -Command "Invoke-WebRequest -Uri https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.15.0.36214-windows.zip -OutFile sonar-scanner-cli.zip"
-                        powershell -Command "Expand-Archive -Path sonar-scanner-cli.zip -DestinationPath ."
-                    )
-
-                    REM Run SonarScanner
-                    .\\sonar-scanner-5.15.0.36214-windows\\bin\\sonar-scanner.bat
+                    REM Run SonarScanner via npm
+                    sonar-scanner -Dsonar.login=%SONAR_TOKEN%
                     """
                 }
             }
