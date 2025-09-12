@@ -10,25 +10,25 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'npm test'
+                bat 'npm test'
             }
         }
 
         stage('Run Coverage') {
             steps {
-                sh 'npm run coverage'
+                bat 'npm run coverage'
             }
         }
 
         stage('Security Scan') {
             steps {
-                sh 'snyk test'
+                bat 'snyk test'
             }
         }
     }
